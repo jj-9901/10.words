@@ -1,4 +1,4 @@
-
+import { initDarkMode } from './darkmode.js';
 import { firebaseConfig } from './config.js';
 import { 
   initializeApp 
@@ -12,21 +12,24 @@ import {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.body.classList.add("dark");
+}
+
 // ===== Create full-screen popup HTML dynamically =====
 const popupHTML = `
-<div id="popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-    background:white; z-index:1000; padding:20px; box-sizing:border-box; overflow-y:auto;">
-  
-  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:10px;">
-    <h2 id="popupQuestion" style="margin:0;"></h2>
-    <i id="closePopup" class="fas fa-times" style="cursor:pointer; font-size:1.5rem;"></i>
-  </div>
+<div id="popup" class="fullscreen-popup" style="display:none;">
+  <div class="popup-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--primary-color); padding-bottom:10px;">
+      <h2 id="popupQuestion" style="margin:0;"></h2>
+      <i id="closePopup" class="fas fa-times" style="cursor:pointer; font-size:1.5rem;"></i>
+    </div>
 
-  <div id="answersList" style="margin-top:20px;"></div>
-  
-  <textarea id="answerInput" placeholder="In not more than 10 words, sweetie"
-    style="width:100%; margin-top:20px; height:80px; resize:none;"></textarea>
-  <button id="submitAnswer" style="margin-top:10px;">Submit Answer</button>
+    <div id="answersList" style="margin-top:20px;"></div>
+
+    <textarea id="answerInput" placeholder="In not more than 10 words, sweetie"></textarea>
+    <button id="submitAnswer">Submit Answer</button>
+  </div>
 </div>
 `;
 document.body.insertAdjacentHTML("beforeend", popupHTML);
@@ -62,7 +65,7 @@ async function loadQuestions() {
       const data = docSnap.data();
       const div = document.createElement("div");
       div.classList.add("question");
-      div.innerHTML = `<strong>${data.question}</strong>`;
+      div.innerHTML = `${data.question}`;
 
       // Click opens popup
       div.addEventListener("click", () => openPopup(docSnap.id, data.question));
@@ -77,7 +80,7 @@ async function loadQuestions() {
 // ===== Open popup =====
 async function openPopup(questionId, questionText) {
   document.getElementById("popupQuestion").textContent = questionText;
-  document.getElementById("popup").style.display = "block";
+  document.getElementById("popup").style.display = "flex";
   document.getElementById("answerInput").value = "";
 
   loadAnswers(questionId);
@@ -114,6 +117,7 @@ async function loadAnswers(questionId) {
       const data = docSnap.data();
       const div = document.createElement("div");
       div.textContent = `${index++}. ${data.answer}`;
+      div.classList.add("answer");
       answersContainer.appendChild(div);
       answersContainer.appendChild(document.createElement("hr"));
     });
@@ -144,3 +148,4 @@ async function submitAnswer(questionId) {
 }
 
 loadQuestions();
+initDarkMode();
