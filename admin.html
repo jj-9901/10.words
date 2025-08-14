@@ -1,21 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - Pending & Approved Questions</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .popup.fullscreen-popup {
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;
+      z-index: 9999;
+    }
+    .popup-content {
+      background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; width: 90%;
+    }
+    .popup-content h2 { margin-top:0; }
+  </style>
 </head>
 <body>
   <h1>Admin Panel</h1>
-  <p><a href="index.html">Back to Home</a></p>
-
-  <!-- Pending Questions -->
   <h2>Pending Questions</h2>
-  <div id="pendingQuestions">Loading pending questions...</div>
+  <div id="pendingQuestions"></div>
 
-  <!-- Approved Questions -->
   <h2>Approved Questions</h2>
-  <div id="approvedQuestions">Loading approved questions...</div>
+  <div id="approvedQuestions"></div>
 
   <script type="module" src="admin.js"></script>
 </body>
