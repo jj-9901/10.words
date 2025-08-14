@@ -4,7 +4,7 @@ import {
   getFirestore, collection, getDocs, deleteDoc, doc, setDoc, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { 
-  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult, signOut
+  getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Initialize Firebase
@@ -12,6 +12,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+// Force session-only persistence (cleared on refresh)
+setPersistence(auth, browserSessionPersistence)
+  .catch(err => console.error("Error setting persistence:", err));
 
 // Admin authentication
 onAuthStateChanged(auth, async (user) => {
