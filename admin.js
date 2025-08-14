@@ -12,12 +12,26 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Admin authentication
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    await signInWithPopup(auth, provider).catch(console.error);
-    return;
+// Hide admin content until login
+const loginBtn = document.getElementById("loginBtn");
+const pendingContainer = document.getElementById("pendingQuestions");
+const approvedContainer = document.getElementById("approvedQuestions");
+pendingContainer.style.display = "none";
+approvedContainer.style.display = "none";
+
+// Trigger login on button click
+loginBtn.addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Popup blocked or login failed. Try again.");
   }
+});
+
+// Check auth state
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
 
   try {
     const tokenResult = await getIdTokenResult(user);
@@ -25,6 +39,11 @@ onAuthStateChanged(auth, async (user) => {
       document.body.innerHTML = "<h2>Access denied: not an admin.</h2>";
       return;
     }
+
+    // Hide login button, show content
+    loginBtn.style.display = "none";
+    pendingContainer.style.display = "block";
+    approvedContainer.style.display = "block";
 
     loadPendingQuestions();
     loadApprovedQuestions();
@@ -90,7 +109,7 @@ async function loadAnswers(questionId, container) {
 
 // Pending questions
 async function loadPendingQuestions() {
-  const container = document.getElementById("pendingQuestions");
+  const container = pendingContainer;
   container.innerHTML = "";
 
   try {
@@ -149,7 +168,7 @@ async function loadPendingQuestions() {
 
 // Approved questions
 async function loadApprovedQuestions() {
-  const container = document.getElementById("approvedQuestions");
+  const container = approvedContainer;
   container.innerHTML = "";
 
   try {
