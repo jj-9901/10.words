@@ -13,18 +13,27 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+const pendingContainer = document.getElementById("pendingQuestions");
+const approvedContainer = document.getElementById("approvedQuestions");
+
+// Hide question sections initially
+pendingContainer.style.display = "none";
+approvedContainer.style.display = "none";
+
 let loginBtn, logoutBtn;
 
-// Force logout on page load to ensure login every time
-signOut(auth).catch(() => {}); // ignore if already signed out
+// Show login button initially
 showLoginButton();
 
 // Monitor auth state
 onAuthStateChanged(auth, async (user) => {
+  // Remove existing buttons
   if (loginBtn) loginBtn.remove();
   if (logoutBtn) logoutBtn.remove();
 
   if (!user) {
+    pendingContainer.style.display = "none";
+    approvedContainer.style.display = "none";
     showLoginButton();
     return;
   }
@@ -37,6 +46,9 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     showLogoutButton();
+    pendingContainer.style.display = "block";
+    approvedContainer.style.display = "block";
+
     loadPendingQuestions();
     loadApprovedQuestions();
   } catch (err) {
@@ -68,6 +80,8 @@ function showLoginButton() {
 
       loginBtn.remove();
       showLogoutButton();
+      pendingContainer.style.display = "block";
+      approvedContainer.style.display = "block";
       loadPendingQuestions();
       loadApprovedQuestions();
     } catch (err) {
@@ -90,8 +104,113 @@ function showLogoutButton() {
   logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
     logoutBtn.remove();
+    pendingContainer.style.display = "none";
+    approvedContainer.style.display = "none";
     showLoginButton();
   });
+}
+
+// Load pending questions
+async function loadPendingQuestions() {
+  pendingContainer.innerHTML = "";
+  try {
+    const snapshot = await getDocs(collection(db, "pendingQuestions"));
+    if (snapshot.empty) {
+      pendingContainer.innerHTML = "<p>No pending questions.</p>";
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const qData = docSnap.data();
+      const questionText = qData.text || qData.question || qData.title || JSON.stringify(qData);
+
+      const div = document.createElement("div");
+      div.style.display = "flex";
+      div.style.justifyContent = "space-between";
+      div.style.alignItems = "center";
+      div.style.borderBottom = "1px solid #ccc";
+      div.style.padding = "8px 0";
+
+      div.innerHTML = `
+        <span>${questionText}</span>
+        <div>
+          <button data-id="${docSnap.id}" class="approve-btn" style="cursor:pointer;">Approve</button>
+          <button data-id="${docSnap.id}" class="delete-pending" style="cursor:pointer;">Delete</button>
+        </div>
+      `;
+      pendingContainer.appendChild(div);
+    });
+
+    document.querySelectorAll(".approve-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const docRef = doc(db, "pendingQuestions", id);
+        const qData = (await getDoc(docRef)).data();
+        await setDoc(doc(db, "approvedQuestions", id), qData);
+        await deleteDoc(docRef);
+        loadPendingQuestions();
+        loadApprovedQuestions();
+      });
+    });
+
+    document.querySelectorAll(".delete-pending").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await deleteDoc(doc(db, "pendingQuestions", btn.dataset.id));
+        loadPendingQuestions();
+      });
+    });
+
+  } catch (error) {
+    pendingContainer.innerHTML = "Error loading pending questions.";
+    console.error(error);
+  }
+}
+
+// Load approved questions
+async function loadApprovedQuestions() {
+  approvedContainer.innerHTML = "";
+  try {
+    const snapshot = await getDocs(collection(db, "approvedQuestions"));
+    if (snapshot.empty) {
+      approvedContainer.innerHTML = "<p>No approved questions.</p>";
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const qData = docSnap.data();
+      const questionText = qData.text || qData.question || qData.title || JSON.stringify(qData);
+
+      const div = document.createElement("div");
+      div.style.display = "flex";
+      div.style.justifyContent = "space-between";
+      div.style.alignItems = "center";
+      div.style.borderBottom = "1px solid #ccc";
+      div.style.padding = "8px 0";
+
+      div.innerHTML = `
+        <span style="cursor:grab;" class="approved-question" data-id="${docSnap.id}" data-text="${questionText}">
+          ${questionText}
+        </span>
+        <button data-id="${docSnap.id}" class="delete-btn" style="cursor:pointer;">Delete</button>
+      `;
+      approvedContainer.appendChild(div);
+    });
+
+    document.querySelectorAll(".approved-question").forEach(span => {
+      span.addEventListener("click", () => showAnswersPopup(span.dataset.id, span.dataset.text));
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await deleteDoc(doc(db, "approvedQuestions", btn.dataset.id));
+        loadApprovedQuestions();
+      });
+    });
+
+  } catch (error) {
+    approvedContainer.innerHTML = "Error loading approved questions.";
+    console.error(error);
+  }
 }
 
 // Answers popup
@@ -111,6 +230,7 @@ function showAnswersPopup(questionId, questionText) {
   loadAnswers(questionId, popup.querySelector("#answersContainer"));
 }
 
+// Load answers
 async function loadAnswers(questionId, container) {
   try {
     const snapshot = await getDocs(collection(db, "answers"));
@@ -146,113 +266,5 @@ async function loadAnswers(questionId, container) {
   } catch (err) {
     container.innerHTML = "Error loading answers.";
     console.error(err);
-  }
-}
-
-// Pending questions
-async function loadPendingQuestions() {
-  const container = document.getElementById("pendingQuestions");
-  container.innerHTML = "";
-
-  try {
-    const snapshot = await getDocs(collection(db, "pendingQuestions"));
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No pending questions.</p>";
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const qData = docSnap.data();
-      const questionText = qData.text || qData.question || qData.title || JSON.stringify(qData);
-
-      const div = document.createElement("div");
-      div.style.display = "flex";
-      div.style.justifyContent = "space-between";
-      div.style.alignItems = "center";
-      div.style.borderBottom = "1px solid #ccc";
-      div.style.padding = "8px 0";
-
-      div.innerHTML = `
-        <span>${questionText}</span>
-        <div>
-          <button data-id="${docSnap.id}" class="approve-btn" style="cursor:pointer;">Approve</button>
-          <button data-id="${docSnap.id}" class="delete-pending" style="cursor:pointer;">Delete</button>
-        </div>
-      `;
-      container.appendChild(div);
-    });
-
-    document.querySelectorAll(".approve-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.id;
-        const docRef = doc(db, "pendingQuestions", id);
-        const qData = (await getDoc(docRef)).data();
-
-        await setDoc(doc(db, "approvedQuestions", id), qData);
-        await deleteDoc(docRef);
-        loadPendingQuestions();
-        loadApprovedQuestions();
-      });
-    });
-
-    document.querySelectorAll(".delete-pending").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        await deleteDoc(doc(db, "pendingQuestions", btn.dataset.id));
-        loadPendingQuestions();
-      });
-    });
-
-  } catch (error) {
-    container.innerHTML = "Error loading pending questions.";
-    console.error(error);
-  }
-}
-
-// Approved questions
-async function loadApprovedQuestions() {
-  const container = document.getElementById("approvedQuestions");
-  container.innerHTML = "";
-
-  try {
-    const snapshot = await getDocs(collection(db, "approvedQuestions"));
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No approved questions.</p>";
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const qData = docSnap.data();
-      const questionText = qData.text || qData.question || qData.title || JSON.stringify(qData);
-
-      const div = document.createElement("div");
-      div.style.display = "flex";
-      div.style.justifyContent = "space-between";
-      div.style.alignItems = "center";
-      div.style.borderBottom = "1px solid #ccc";
-      div.style.padding = "8px 0";
-
-      div.innerHTML = `
-        <span style="cursor:grab;" class="approved-question" data-id="${docSnap.id}" data-text="${questionText}">
-          ${questionText}
-        </span>
-        <button data-id="${docSnap.id}" class="delete-btn" style="cursor:pointer;">Delete</button>
-      `;
-      container.appendChild(div);
-    });
-
-    document.querySelectorAll(".approved-question").forEach(span => {
-      span.addEventListener("click", () => showAnswersPopup(span.dataset.id, span.dataset.text));
-    });
-
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        await deleteDoc(doc(db, "approvedQuestions", btn.dataset.id));
-        loadApprovedQuestions();
-      });
-    });
-
-  } catch (error) {
-    container.innerHTML = "Error loading approved questions.";
-    console.error(error);
   }
 }
