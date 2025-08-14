@@ -7,6 +7,7 @@ import {
   getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
