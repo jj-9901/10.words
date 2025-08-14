@@ -1,4 +1,3 @@
-
 import { firebaseConfig } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
@@ -13,6 +12,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// Admin authentication
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     await signInWithPopup(auth, provider).catch(console.error);
@@ -26,7 +26,6 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    // If admin
     loadPendingQuestions();
     loadApprovedQuestions();
   } catch (err) {
@@ -35,7 +34,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Popup for answers
+// Answers popup
 function showAnswersPopup(questionId, questionText) {
   const popup = document.createElement("div");
   popup.className = "popup fullscreen-popup";
@@ -48,20 +47,17 @@ function showAnswersPopup(questionId, questionText) {
   `;
   document.body.appendChild(popup);
 
-  popup.querySelector(".close-popup").addEventListener("click", () => {
-    popup.remove();
-  });
-
+  popup.querySelector(".close-popup").addEventListener("click", () => popup.remove());
   loadAnswers(questionId, popup.querySelector("#answersContainer"));
 }
 
 async function loadAnswers(questionId, container) {
   try {
-    const qSnap = await getDocs(collection(db, "answers"));
+    const snapshot = await getDocs(collection(db, "answers"));
     container.innerHTML = "";
 
     let found = false;
-    qSnap.forEach(docSnap => {
+    snapshot.forEach(docSnap => {
       const data = docSnap.data();
       if (data.questionId === questionId) {
         found = true;
@@ -77,9 +73,7 @@ async function loadAnswers(questionId, container) {
       }
     });
 
-    if (!found) {
-      container.innerHTML = "<p>No answers yet.</p>";
-    }
+    if (!found) container.innerHTML = "<p>No answers yet.</p>";
 
     container.querySelectorAll(".delete-answer").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -87,13 +81,14 @@ async function loadAnswers(questionId, container) {
         loadAnswers(questionId, container);
       });
     });
+
   } catch (err) {
     container.innerHTML = "Error loading answers.";
     console.error(err);
   }
 }
 
-// Load Pending Questions
+// Pending questions
 async function loadPendingQuestions() {
   const container = document.getElementById("pendingQuestions");
   container.innerHTML = "";
@@ -152,7 +147,7 @@ async function loadPendingQuestions() {
   }
 }
 
-// Load Approved Questions
+// Approved questions
 async function loadApprovedQuestions() {
   const container = document.getElementById("approvedQuestions");
   container.innerHTML = "";
@@ -185,9 +180,7 @@ async function loadApprovedQuestions() {
     });
 
     document.querySelectorAll(".approved-question").forEach(span => {
-      span.addEventListener("click", () => {
-        showAnswersPopup(span.dataset.id, span.dataset.text);
-      });
+      span.addEventListener("click", () => showAnswersPopup(span.dataset.id, span.dataset.text));
     });
 
     document.querySelectorAll(".delete-btn").forEach(btn => {
