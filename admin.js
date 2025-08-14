@@ -4,7 +4,7 @@ import {
   getFirestore, collection, getDocs, deleteDoc, doc, setDoc, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { 
-  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult
+  getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Initialize Firebase
@@ -27,6 +27,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
+    // Load admin panel
     loadPendingQuestions();
     loadApprovedQuestions();
   } catch (err) {
@@ -52,11 +53,14 @@ function showLoginButton() {
 
       if (!tokenResult.claims.admin) {
         alert("Access denied: not an admin.");
-        await auth.signOut();
+        await signOut(auth);
         return;
       }
 
+      // Remove login button after successful login
       btn.remove();
+
+      // Load the admin panel
       loadPendingQuestions();
       loadApprovedQuestions();
     } catch (err) {
