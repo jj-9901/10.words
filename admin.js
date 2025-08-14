@@ -13,8 +13,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Admin authentication
+// Keep references to login/logout buttons
+let loginBtn = null;
+let logoutBtn = null;
+
+// Admin authentication check
 onAuthStateChanged(auth, async (user) => {
+  // Remove existing buttons
+  if (loginBtn) loginBtn.remove();
+  if (logoutBtn) logoutBtn.remove();
+
   if (!user) {
     showLoginButton();
     return;
@@ -27,7 +35,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    // Load admin panel
+    showLogoutButton();
     loadPendingQuestions();
     loadApprovedQuestions();
   } catch (err) {
@@ -38,15 +46,15 @@ onAuthStateChanged(auth, async (user) => {
 
 // Show login button
 function showLoginButton() {
-  const btn = document.createElement("button");
-  btn.textContent = "Login as Admin";
-  btn.style.cursor = "pointer";
-  btn.style.fontSize = "18px";
-  btn.style.padding = "10px 20px";
-  btn.style.margin = "20px";
-  document.body.prepend(btn);
+  loginBtn = document.createElement("button");
+  loginBtn.textContent = "Login as Admin";
+  loginBtn.style.cursor = "pointer";
+  loginBtn.style.fontSize = "18px";
+  loginBtn.style.padding = "10px 20px";
+  loginBtn.style.margin = "20px";
+  document.body.prepend(loginBtn);
 
-  btn.addEventListener("click", async () => {
+  loginBtn.addEventListener("click", async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const tokenResult = await getIdTokenResult(result.user);
@@ -57,16 +65,31 @@ function showLoginButton() {
         return;
       }
 
-      // Remove login button after successful login
-      btn.remove();
-
-      // Load the admin panel
+      loginBtn.remove();
+      showLogoutButton();
       loadPendingQuestions();
       loadApprovedQuestions();
     } catch (err) {
       console.error("Login error:", err);
       alert("Login failed. Check console for details.");
     }
+  });
+}
+
+// Show logout button
+function showLogoutButton() {
+  logoutBtn = document.createElement("button");
+  logoutBtn.textContent = "Logout";
+  logoutBtn.style.cursor = "pointer";
+  logoutBtn.style.fontSize = "16px";
+  logoutBtn.style.padding = "8px 16px";
+  logoutBtn.style.margin = "20px";
+  document.body.prepend(logoutBtn);
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    logoutBtn.remove();
+    showLoginButton();
   });
 }
 
