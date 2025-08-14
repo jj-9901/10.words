@@ -12,26 +12,12 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Hide admin content until login
-const loginBtn = document.getElementById("loginBtn");
-const pendingContainer = document.getElementById("pendingQuestions");
-const approvedContainer = document.getElementById("approvedQuestions");
-pendingContainer.style.display = "none";
-approvedContainer.style.display = "none";
-
-// Trigger login on button click
-loginBtn.addEventListener("click", async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (err) {
-    console.error("Login error:", err);
-    alert("Popup blocked or login failed. Try again.");
-  }
-});
-
-// Check auth state
+// Admin authentication
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+  if (!user) {
+    showLoginButton();
+    return;
+  }
 
   try {
     const tokenResult = await getIdTokenResult(user);
@@ -40,11 +26,6 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    // Hide login button, show content
-    loginBtn.style.display = "none";
-    pendingContainer.style.display = "block";
-    approvedContainer.style.display = "block";
-
     loadPendingQuestions();
     loadApprovedQuestions();
   } catch (err) {
@@ -52,6 +33,37 @@ onAuthStateChanged(auth, async (user) => {
     document.body.innerHTML = "<h2>Error checking admin status.</h2>";
   }
 });
+
+// Show login button
+function showLoginButton() {
+  const btn = document.createElement("button");
+  btn.textContent = "Login as Admin";
+  btn.style.cursor = "pointer";
+  btn.style.fontSize = "18px";
+  btn.style.padding = "10px 20px";
+  btn.style.margin = "20px";
+  document.body.prepend(btn);
+
+  btn.addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const tokenResult = await getIdTokenResult(result.user);
+
+      if (!tokenResult.claims.admin) {
+        alert("Access denied: not an admin.");
+        await auth.signOut();
+        return;
+      }
+
+      btn.remove();
+      loadPendingQuestions();
+      loadApprovedQuestions();
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Login failed. Check console for details.");
+    }
+  });
+}
 
 // Answers popup
 function showAnswersPopup(questionId, questionText) {
@@ -84,9 +96,10 @@ async function loadAnswers(questionId, container) {
         ansDiv.style.display = "flex";
         ansDiv.style.justifyContent = "space-between";
         ansDiv.style.alignItems = "center";
+        ansDiv.style.marginBottom = "8px";
         ansDiv.innerHTML = `
           <span>${data.answer}</span>
-          <button class="delete-answer" style="cursor:pointer; margin-bottom:8px;" data-id="${docSnap.id}">Delete</button>
+          <button class="delete-answer" style="cursor:pointer;" data-id="${docSnap.id}">Delete</button>
         `;
         container.appendChild(ansDiv);
       }
@@ -109,7 +122,7 @@ async function loadAnswers(questionId, container) {
 
 // Pending questions
 async function loadPendingQuestions() {
-  const container = pendingContainer;
+  const container = document.getElementById("pendingQuestions");
   container.innerHTML = "";
 
   try {
@@ -134,7 +147,7 @@ async function loadPendingQuestions() {
         <span>${questionText}</span>
         <div>
           <button data-id="${docSnap.id}" class="approve-btn" style="cursor:pointer;">Approve</button>
-          <button data-id="${docSnap.id}" class="delete-pending" style="cursor:pointer; margin-bottom:8px;">Delete</button>
+          <button data-id="${docSnap.id}" class="delete-pending" style="cursor:pointer;">Delete</button>
         </div>
       `;
       container.appendChild(div);
@@ -168,7 +181,7 @@ async function loadPendingQuestions() {
 
 // Approved questions
 async function loadApprovedQuestions() {
-  const container = approvedContainer;
+  const container = document.getElementById("approvedQuestions");
   container.innerHTML = "";
 
   try {
@@ -193,7 +206,7 @@ async function loadApprovedQuestions() {
         <span style="cursor:grab;" class="approved-question" data-id="${docSnap.id}" data-text="${questionText}">
           ${questionText}
         </span>
-        <button data-id="${docSnap.id}" class="delete-btn" style="cursor:pointer; margin-bottom:8px;">Delete</button>
+        <button data-id="${docSnap.id}" class="delete-btn" style="cursor:pointer;">Delete</button>
       `;
       container.appendChild(div);
     });
