@@ -7,19 +7,20 @@ import {
   getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, getIdTokenResult, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// Initialize Firebase
+// Firebase init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Keep references to login/logout buttons
-let loginBtn = null;
-let logoutBtn = null;
+let loginBtn, logoutBtn;
 
-// Admin authentication check
+// Force logout on page load to ensure login every time
+signOut(auth).catch(() => {}); // ignore if already signed out
+showLoginButton();
+
+// Monitor auth state
 onAuthStateChanged(auth, async (user) => {
-  // Remove existing buttons
   if (loginBtn) loginBtn.remove();
   if (logoutBtn) logoutBtn.remove();
 
@@ -81,8 +82,8 @@ function showLogoutButton() {
   logoutBtn = document.createElement("button");
   logoutBtn.textContent = "Logout";
   logoutBtn.style.cursor = "pointer";
-  logoutBtn.style.fontSize = "16px";
-  logoutBtn.style.padding = "8px 16px";
+  logoutBtn.style.fontSize = "18px";
+  logoutBtn.style.padding = "10px 20px";
   logoutBtn.style.margin = "20px";
   document.body.prepend(logoutBtn);
 
