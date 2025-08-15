@@ -27,7 +27,7 @@ const popupHTML = `
 
     <div id="answersList" style="margin-top:20px;"></div>
 
-    <textarea id="answerInput" placeholder="In not more than 10 words, sweetie"></textarea>
+    <textarea id="answerInput" placeholder="In not more than 10 words, મોટાભાઈ."></textarea>
     <button id="submitAnswer">Submit Answer</button>
   </div>
 </div>
@@ -146,6 +146,36 @@ async function submitAnswer(questionId) {
     alert("Error submitting answer.");
   }
 }
+
+document.getElementById("about").addEventListener("click", () => {
+    // Create popup container
+    const popup = document.createElement("div");
+    popup.className = "about";
+
+    // Create close button
+    const closeBtn = document.createElement("span");
+    closeBtn.innerHTML = `<i class="fas fa-times"></i>`;
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        cursor: pointer;
+    `;
+
+    // Create message
+    const message = document.createElement("p");
+    message.textContent = "કેમ છો, મોટાભાઈ! 10 Words is a lighthearted question-and-answer platform with one quirky twist: every answer must be exactly 10 words or less. Anyone can post a question for admin approval, and by clicking on it, anyone can answer completely anonymously — making it both fun and a little mysterious. You never know who might have written the witty, weird, or wise replies you’re reading. Switch between dark and light themes to match your mood while you browse. It’s perfect for quick bursts of creativity or harmless curiosity, whether you’re here to ask burning questions, share clever answers, or simply scroll through what others have written. More features are on the way, but even now, 10 Words is already a fun, unpredictable space to explore.";
+
+    // Append elements
+    popup.appendChild(closeBtn);
+    popup.appendChild(message);
+    document.body.appendChild(popup);
+
+    // Close event
+    closeBtn.addEventListener("click", () => {
+        popup.remove();
+    });
+});
 
 loadQuestions();
 initDarkMode();

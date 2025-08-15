@@ -25,6 +25,38 @@ body {
   justify-content:center;
 }
 
+#about{
+  font-size:18px;
+  background-color: var(--bg-color);
+  color:var(--text-color);
+  border:none;
+  position:absolute;
+  text-decoration:line-through;
+  transition: text-decoration 0.1ms ease;
+}
+#about:hover{
+  text-decoration:none;
+}
+
+.about{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align:center;
+  background: var(--bg-color);
+  padding: 30px;
+  border-radius: 5px;
+  border:1px solid var(--text-color);
+  box-shadow: 10px 10px 500px var(--primary-color);
+  min-width: 70%;
+  z-index: 9999;
+  letter-spacing: 3px;
+  word-spacing: 10px;
+  max-width: 80%;
+  word-wrap: break-word;
+  white-space: normal;
+}
 h1 {
   text-align: center;
   letter-spacing:2px;
