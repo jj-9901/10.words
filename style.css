@@ -1,18 +1,18 @@
-/* ===== Root Colors ===== */
+/*Root Colors*/
 :root {
   --bg-color: #ffffff;
   --text-color: #000000;
   --primary-color: #ffcc80;
 }
 
-/* ===== Dark Mode ===== */
+/*Dark Mode*/
 body.dark {
   --bg-color: #121212;
   --text-color: #f5f5f5;
   --primary-color: rgb(21, 49, 139);
 }
 
-/* ===== General Page Styles ===== */
+/*General Page Styles*/
 body {
   font-family:monospace;
   font-size:18px;
@@ -63,7 +63,7 @@ h1 {
 }
 
 
-/* ===== Form ===== */
+/*Form*/
 .form {
   display:flex;
   gap: 1.5%;
@@ -101,7 +101,7 @@ button:hover{
 
 input::placeholder { color: var(--text-color); }
 
-/* ===== Questions ===== */
+/*Questions*/
 
 .questionsContainer{
   width:100%;
@@ -125,7 +125,7 @@ input::placeholder { color: var(--text-color); }
   color: var(--primary-color);
 }
 
-/* ===== Answers ===== */
+/*Answers*/
 .answer {
   margin-left: 15px;
   padding: 5px;
@@ -133,7 +133,7 @@ input::placeholder { color: var(--text-color); }
   border-left: 3px solid var(--primary-color);
 }
 
-/* ===== Fullscreen Popup ===== */
+/*Fullscreen Popup*/
 .fullscreen-popup {
   display: none; /* hidden by default */
   position: fixed;
@@ -223,4 +223,17 @@ input::placeholder { color: var(--text-color); }
   color:var(--text-color);
   background-color: var(--bg-color);
   border:1px solid var(--primary-color);
+}
+
+
+/*Scrollbar Glow*/
+.scrollbar-glow {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 0px;
+  height: 100vh;
+  box-shadow: 0 0 50px 10px var(--primary-color);
+  z-index: 0;
+  pointer-events: none;
 }
